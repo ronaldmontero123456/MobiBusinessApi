@@ -42,6 +42,5 @@ namespace MovilBusinessApiCore.Models
 
         public Guid rowguid { get; set; }
 
-        public virtual UsuarioSistema UsuarioSistema { get; set; }
     }
 }

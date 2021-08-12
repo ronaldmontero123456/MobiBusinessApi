@@ -1,0 +1,30 @@
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 05-08-2021 12:17:17 versión 1.0.0 en Fecha: 05/08/2021 12:17:17
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 05-08-2021 12:20:57 versión 1.0.0 en Fecha: 05/08/2021 12:20:57
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 05-08-2021 12:28:01 versión 1.0.0 en Fecha: 05/08/2021 12:28:01
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 05-08-2021 12:30:59 versión 1.0.0 en Fecha: 05/08/2021 12:30:59
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 05-08-2021 12:34:48 versión 1.0.0 en Fecha: 05/08/2021 12:34:48
+
+
+RawQuery() - Error procesando - RepCodigo: mmateo. Mensaje: ADP_ConnectionRequired_Fill versión 1.0.0 en Fecha: 05/08/2021 12:34:48
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 05-08-2021 12:41:13 versión 1.0.0 en Fecha: 05/08/2021 12:41:13
+
+
+RawQuery() - Error procesando - RepCodigo: mmateo. Mensaje: Unable to cast object of type 'Microsoft.Data.SqlClient.SqlConnection' to type 'System.Data.SqlClient.SqlConnection'. versión 1.0.0 en Fecha: 05/08/2021 12:41:13
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 05-08-2021 12:43:28 versión 1.0.0 en Fecha: 05/08/2021 12:43:28
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 05-08-2021 12:55:12 versión 1.0.0 en Fecha: 05/08/2021 12:55:12
+
+

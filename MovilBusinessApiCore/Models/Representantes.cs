@@ -8,11 +8,6 @@ namespace MovilBusinessApiCore.Models
 
     public partial class Representantes
     {
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
-        public Representantes()
-        {
-            Pedidos = new HashSet<Pedidos>();
-        }
 
         [Key]
         [StringLength(15)]
@@ -98,9 +93,5 @@ namespace MovilBusinessApiCore.Models
 
         public int? VehID { get; set; }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<Pedidos> Pedidos { get; set; }
-
-        public virtual UsuarioSistema UsuarioSistema { get; set; }
     }
 }

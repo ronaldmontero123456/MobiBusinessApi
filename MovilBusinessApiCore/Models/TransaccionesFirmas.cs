@@ -35,7 +35,5 @@ namespace MovilBusinessApiCore.Models
         public string UsuInicioSesion { get; set; }
 
         public DateTime? TraFechaActualizacion { get; set; }
-
-        public virtual UsuarioSistema UsuarioSistema { get; set; }
     }
 }

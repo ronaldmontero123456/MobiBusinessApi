@@ -13,7 +13,7 @@ namespace MovilBusinessApiCore.Utils
 
         public static string LogDate
         {
-            get { return DateTime.Now.ToString("dd-MM-"); }
+            get { return DateTime.Now.ToString("yyyy-MM-dd-"); }
         }
 
         public static string LogTime
@@ -33,7 +33,7 @@ namespace MovilBusinessApiCore.Utils
 
                 string Path = UrlLog + "/" + LogDate;
 
-                string filePath = string.Concat(Path + "/", DateTime.Now.ToString("dd-MM-") + "(" + RpCodigo + (lr?"-CambiosConsumidos":"")+ ").txt");
+                string filePath = string.Concat(Path + "/", DateTime.Now.ToString("yyyy-MM-dd") + "(" + RpCodigo + (lr?"-CambiosConsumidos":"")+ ").txt");
              
                 Directory.CreateDirectory(Path);
 

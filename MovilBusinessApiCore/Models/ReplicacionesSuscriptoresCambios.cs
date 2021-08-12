@@ -30,10 +30,6 @@ namespace MovilBusinessApiCore.Models
         public string RscScript { get; set; }
 
         [JsonIgnore] public DateTime? RscFechaActualizacion { get; set; }
-
-        [JsonIgnore] public virtual Replicaciones Replicaciones { get; set; }
-
-        [JsonIgnore] public virtual ReplicacionesSuscriptores ReplicacionesSuscriptores { get; set; }
     }
 
     public partial class ReplicacionesSuscriptoresCambiosV8
@@ -42,9 +38,5 @@ namespace MovilBusinessApiCore.Models
         public Guid RscKey { get; set; }
 
         public string RscScript { get; set; }
-
-        [JsonIgnore] public virtual Replicaciones Replicaciones { get; set; }
-
-        [JsonIgnore] public virtual ReplicacionesSuscriptores ReplicacionesSuscriptores { get; set; }
     }
 }

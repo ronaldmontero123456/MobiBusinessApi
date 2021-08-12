@@ -1,14 +1,13 @@
 namespace MovilBusinessApiCore.Models
 {
     using System;
-    using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
     using System.ComponentModel.DataAnnotations.Schema;
-    
+
 
     public partial class Parametros
     {
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        //[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int ParKey { get; set; }
 
         [Key]
@@ -27,7 +26,5 @@ namespace MovilBusinessApiCore.Models
         public DateTime? ParFechaActualizacion { get; set; }
 
         public Guid rowguid { get; set; }
-
-        public virtual UsuarioSistema UsuarioSistema { get; set; }
     }
 }

@@ -76,6 +76,5 @@ namespace MovilBusinessApiCore.Models
 
         public decimal? PedFlete { get; set; }
 
-        public virtual UsuarioSistema UsuarioSistema { get; set; }
     }
 }

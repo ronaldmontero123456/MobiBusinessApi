@@ -33,7 +33,5 @@ namespace MovilBusinessApiCore.Models
 
         [StringLength(100)]
         public string EstSiguientesEstados { get; set; }
-
-        public virtual UsuarioSistema UsuarioSistema { get; set; }
     }
 }

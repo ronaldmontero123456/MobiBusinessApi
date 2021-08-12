@@ -8,11 +8,6 @@ namespace MovilBusinessApiCore.Models
 
     public partial class PedidosHistoricos
     {
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
-        public PedidosHistoricos()
-        {
-            PedidosDetalleHistoricos = new HashSet<PedidosDetalleHistoricos>();
-        }
 
         [Key]
         [Column(Order = 0)]
@@ -108,8 +103,5 @@ namespace MovilBusinessApiCore.Models
 
         [StringLength(5000)]
         public string PedOtrosDatos { get; set; }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<PedidosDetalleHistoricos> PedidosDetalleHistoricos { get; set; }
     }
 }

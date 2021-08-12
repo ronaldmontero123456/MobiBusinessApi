@@ -12,6 +12,6 @@ namespace MovilBusinessApiCore.Models.Internal.Structs
         public int Campo { get; set; }
         public string Repcodigo { get; set; } = null;
         public string PreTipo { get; set; } = null;
-        public int  PreAnio { get; set; }
+        public int?  PreAnio { get; set; }
     }
 }

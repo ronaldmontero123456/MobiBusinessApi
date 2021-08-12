@@ -9,5 +9,6 @@ namespace MovilBusinessApiCore.Models.Internal.Structs
     {
         public UsuarioArgs User { get; set; }
         public string Query { get; set; }
+
     }
 }

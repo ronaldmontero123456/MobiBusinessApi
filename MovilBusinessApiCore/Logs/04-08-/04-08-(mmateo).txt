@@ -1,0 +1,150 @@
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 12:38:30 versión 1.0.0 en Fecha: 04/08/2021 12:38:30
+
+
+RawQuery() - Error procesando - RepCodigo: mmateo. Mensaje: Invalid object name 'ReplicacionesSuscriptoresCambios8B3DBA65-C0E5-496C-A648-D0B053D81412'. versión 1.0.0 en Fecha: 04/08/2021 12:38:30
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 12:39:15 versión 1.0.0 en Fecha: 04/08/2021 12:39:15
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 12:45:43 versión 1.0.0 en Fecha: 04/08/2021 12:45:43
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 01:44:21 versión 1.0.0 en Fecha: 04/08/2021 01:44:21
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 02:10:19 versión 1.0.0 en Fecha: 04/08/2021 02:10:19
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 02:21:09 versión 1.0.0 en Fecha: 04/08/2021 02:21:09
+
+
+RawQuery() - Error procesando - RepCodigo: mmateo. Mensaje: Column 'Replicaciones' does not belong to table . versión 1.0.0 en Fecha: 04/08/2021 02:21:26
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 02:21:56 versión 1.0.0 en Fecha: 04/08/2021 02:21:56
+
+
+RawQuery() - Error procesando - RepCodigo: mmateo. Mensaje: Column 'Replicaciones' does not belong to table . versión 1.0.0 en Fecha: 04/08/2021 02:23:07
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 02:23:12 versión 1.0.0 en Fecha: 04/08/2021 02:23:12
+
+
+RawQuery() - Error procesando - RepCodigo: mmateo. Mensaje: Column 'Replicaciones' does not belong to table . versión 1.0.0 en Fecha: 04/08/2021 02:23:21
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 02:23:32 versión 1.0.0 en Fecha: 04/08/2021 02:23:32
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 02:26:24 versión 1.0.0 en Fecha: 04/08/2021 02:26:24
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 02:27:46 versión 1.0.0 en Fecha: 04/08/2021 02:27:46
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 02:28:26 versión 1.0.0 en Fecha: 04/08/2021 02:28:26
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 02:38:38 versión 1.0.0 en Fecha: 04/08/2021 02:38:38
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 04:22:39 versión 1.0.0 en Fecha: 04/08/2021 04:22:39
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 04:28:35 versión 1.0.0 en Fecha: 04/08/2021 04:28:35
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 04:32:07 versión 1.0.0 en Fecha: 04/08/2021 04:32:07
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 04:36:44 versión 1.0.0 en Fecha: 04/08/2021 04:36:44
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 04:37:03 versión 1.0.0 en Fecha: 04/08/2021 04:37:03
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 04:39:33 versión 1.0.0 en Fecha: 04/08/2021 04:39:33
+
+
+RawQuery() - Error procesando - RepCodigo: mmateo. Mensaje: source is not IEnumerable<> versión 1.0.0 en Fecha: 04/08/2021 04:39:39
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 04:56:13 versión 1.0.0 en Fecha: 04/08/2021 04:56:13
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 05:11:55 versión 1.0.0 en Fecha: 04/08/2021 05:11:55
+
+
+RawQuery() - Error procesando - RepCodigo: mmateo. Mensaje: Unable to cast object of type 'Microsoft.Data.SqlClient.SqlConnection' to type 'System.Data.SqlClient.SqlConnection'. versión 1.0.0 en Fecha: 04/08/2021 05:11:55
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 05:15:31 versión 1.0.0 en Fecha: 04/08/2021 05:15:31
+
+
+RawQuery() - Error procesando - RepCodigo: mmateo. Mensaje: Login failed for user 'MovilBusiness5STD'. versión 1.0.0 en Fecha: 04/08/2021 05:15:36
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 05:16:55 versión 1.0.0 en Fecha: 04/08/2021 05:16:55
+
+
+RawQuery() - Error procesando - RepCodigo: mmateo. Mensaje: Login failed for user 'MovilBusiness5STD'. versión 1.0.0 en Fecha: 04/08/2021 05:16:55
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 05:22:22 versión 1.0.0 en Fecha: 04/08/2021 05:22:22
+
+
+RawQuery() - Error procesando - RepCodigo: mmateo. Mensaje: Login failed for user 'MovilBusiness5STD'. versión 1.0.0 en Fecha: 04/08/2021 05:22:22
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 05:26:39 versión 1.0.0 en Fecha: 04/08/2021 05:26:39
+
+
+RawQuery() - Error procesando - RepCodigo: mmateo. Mensaje: ADP_ConnectionRequired_Fill versión 1.0.0 en Fecha: 04/08/2021 05:26:39
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 05:27:42 versión 1.0.0 en Fecha: 04/08/2021 05:27:42
+
+
+RawQuery() - Error procesando - RepCodigo: mmateo. Mensaje: ADP_ConnectionRequired_Fill versión 1.0.0 en Fecha: 04/08/2021 05:28:45
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 05:32:06 versión 1.0.0 en Fecha: 04/08/2021 05:32:06
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 05:36:31 versión 1.0.0 en Fecha: 04/08/2021 05:36:31
+
+
+RawQuery() - Error procesando - RepCodigo: mmateo. Mensaje: Unable to cast object of type 'Microsoft.Data.SqlClient.SqlConnection' to type 'System.Data.SqlClient.SqlConnection'. versión 1.0.0 en Fecha: 04/08/2021 05:36:31
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 05:40:49 versión 1.0.0 en Fecha: 04/08/2021 05:40:49
+
+
+RawQuery() - Error procesando - RepCodigo: mmateo. Mensaje: Login failed for user 'MovilBusiness5STD'. versión 1.0.0 en Fecha: 04/08/2021 05:40:50
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 05:59:42 versión 1.0.0 en Fecha: 04/08/2021 05:59:42
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 06:00:06 versión 1.0.0 en Fecha: 04/08/2021 06:00:06
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 06:22:03 versión 1.0.0 en Fecha: 04/08/2021 06:22:03
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 06:34:23 versión 1.0.0 en Fecha: 04/08/2021 06:34:23
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 06:39:49 versión 1.0.0 en Fecha: 04/08/2021 06:39:49
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 06:42:42 versión 1.0.0 en Fecha: 04/08/2021 06:42:42
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 07:00:37 versión 1.0.0 en Fecha: 04/08/2021 07:00:37
+
+
+RawQuery() - Iniciando - RepCodigo: mmateo. EN Fecha: 04-08-2021 07:01:40 versión 1.0.0 en Fecha: 04/08/2021 07:01:40
+
+

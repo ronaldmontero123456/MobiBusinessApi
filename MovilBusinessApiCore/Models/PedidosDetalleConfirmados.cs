@@ -74,7 +74,5 @@ namespace MovilBusinessApiCore.Models
         public DateTime? PedFechaActualizacion { get; set; }
 
         public Guid rowguid { get; set; }
-
-        public virtual UsuarioSistema UsuarioSistema { get; set; }
     }
 }

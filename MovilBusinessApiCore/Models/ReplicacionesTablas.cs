@@ -33,11 +33,5 @@ namespace MovilBusinessApiCore.Models
         public DateTime? RepFechaActualizacion { get; set; }
 
         public Guid rowguid { get; set; }
-
-        [JsonIgnore]public virtual Replicaciones Replicaciones { get; set; }
-
-        [JsonIgnore] public virtual Replicaciones Replicaciones1 { get; set; }
-
-        [JsonIgnore] public virtual UsuarioSistema UsuarioSistema { get; set; }
     }
 }

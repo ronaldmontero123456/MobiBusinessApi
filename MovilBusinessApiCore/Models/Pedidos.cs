@@ -95,9 +95,5 @@ namespace MovilBusinessApiCore.Models
 
         [StringLength(5000)]
         public string PedOtrosDatos { get; set; }
-
-        public virtual Representantes Representantes { get; set; }
-
-        public virtual UsuarioSistema UsuarioSistema { get; set; }
     }
 }

@@ -46,9 +46,5 @@ namespace MovilBusinessApiCore.Models
 
         [StringLength(15)]
         public string RepSupervisor { get; set; }
-
-        public virtual UsuarioSistema UsuarioSistema { get; set; }
-
-        public virtual UsuarioSistema UsuarioSistema1 { get; set; }
     }
 }

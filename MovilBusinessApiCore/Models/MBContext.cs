@@ -1,19 +1,10 @@
 namespace MovilBusinessApiCore.Models
 {
     using Microsoft.EntityFrameworkCore;
-    using Microsoft.Extensions.Configuration;
-    using MovilBusinessApiCore.Models.Internal.Structs;
-    using System;
-    using System.ComponentModel.DataAnnotations.Schema;
-    using System.Linq;
 
     public partial class MBContext : DbContext
     {
-        public MBContext(DbContextOptions<MBContext> options) : base(options){}
-
-        public MBContext(){}
-
-
+        public MBContext(DbContextOptions<MBContext> options) : base(options) { }
 
         public virtual DbSet<Empresa> Empresa { get; set; }
         public virtual DbSet<Estados> Estados { get; set; }
@@ -55,5 +46,221 @@ namespace MovilBusinessApiCore.Models
         public virtual DbSet<PedidosDescuentosConfirmados> PedidosDescuentosConfirmados { get; set; }
         public virtual DbSet<PedidosDescuentosHistoricos> PedidosDescuentosHistoricos { get; set; }
         public virtual DbSet<ClientesReplicacionesUrl> ClientesReplicacionesUrl { get; set; }
+
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Estados>()
+            .HasKey(o => new { o.EstTabla, o.EstEstado });
+
+            modelBuilder.Entity<Pedidos>().
+                HasKey(p => new { p.RepCodigo, p.PedSecuencia });
+
+            modelBuilder.Entity<PedidosAdicionales>().
+                HasKey(p => new
+                {
+                    p.RepCodigo,
+                    p.PedSecuencia
+                });
+
+            modelBuilder.Entity<PedidosBackOrder>().
+                HasKey(p => new
+                {
+                    p.RepCodigo,
+                    p.CliID
+                });
+
+            modelBuilder.Entity<PedidosConfirmados>().
+                HasKey(p => new
+                {
+                    p.RepCodigo,
+                    p.PedSecuencia
+                });
+
+            modelBuilder.Entity<PedidosDescuentos>().
+                HasKey(p => new
+                {
+                    p.RepCodigo,
+                    p.PedSecuencia
+                });
+
+            modelBuilder.Entity<PedidosDetalle>().
+                HasKey(p => new
+                {
+                    p.RepCodigo,
+                    p.PedSecuencia
+                });
+
+            modelBuilder.Entity<PedidosDetalleConfirmados>().
+                HasKey(p => new
+                {
+                    p.RepCodigo,
+                    p.PedSecuencia
+                });
+
+            modelBuilder.Entity<PedidosDetalleHistoricos>().
+                HasKey(p => new
+                {
+                    p.RepCodigo,
+                    p.PedSecuencia
+                });
+
+            modelBuilder.Entity<PedidosHistoricos>().
+                HasKey(p => new
+                {
+                    p.RepCodigo,
+                    p.PedSecuencia
+                });
+
+            modelBuilder.Entity<PedidosPresentacion>().
+                HasKey(p => new
+                {
+                    p.RepCodigo,
+                    p.PedSecuencia
+                });
+
+            modelBuilder.Entity<PedidosSugeridos>().
+                HasKey(p => new
+                {
+                    p.RepCodigo,
+                    p.CliID
+                });
+
+            modelBuilder.Entity<Presupuestos>().
+                HasKey(p => new
+                {
+                    p.RepCodigo,
+                    p.PreTipo
+                });
+
+            modelBuilder.Entity<PresupuestosDiarios>().
+                HasKey(p => new
+                {
+                    p.RepCodigo,
+                    p.PreTipo
+                });
+
+            modelBuilder.Entity<PresupuestosHistoricos>().
+                HasKey(p => new
+                {
+                    p.RepCodigo,
+                    p.PreTipo
+                });
+
+
+            modelBuilder.Entity<PresupuestosProductosExcluir>().
+                HasKey(p => new
+                {
+                    p.PreAnio,
+                    p.PreMes,
+                    p.PreTipo,
+                    p.Proid,
+                });
+
+
+            modelBuilder.Entity<ReplicacionesSuscriptores>().
+                HasKey(p => new
+                {
+                    p.RepID,
+                    p.RepSuscriptor,
+                });
+
+            modelBuilder.Entity<ReplicacionesSuscriptoresBaseDatos>().
+                HasKey(p => new
+                {
+                    p.RepID,
+                    p.RepSuscriptor,
+                    p.rsbSecuencia,
+                });
+
+
+            modelBuilder.Entity<ReplicacionesSuscriptoresSincronizaciones>().
+                HasKey(p => new
+                {
+                    p.RepID,
+                    p.RepSuscriptor,
+                    p.RssSecuencia,
+                });
+
+            modelBuilder.Entity<ReplicacionesTablas>()
+                .HasKey(p => new
+                {
+                    p.RepID,
+                    p.RepTabla,
+                });
+
+
+            modelBuilder.Entity<RepresentantesParametros>()
+                .HasKey(p => new
+                {
+                    p.RepCodigo,
+                    p.ParReferencia,
+                });
+
+            modelBuilder.Entity<RepresentantesSecuencias>()
+                .HasKey(p => new
+                {
+                    p.RepCodigo,
+                    p.RepTabla,
+                });
+
+            modelBuilder.Entity<TransaccionesFirmas>()
+                .HasKey(p => new
+                {
+                    p.RepCodigo,
+                    p.TitID,
+                    p.TraSecuencia,
+                });
+
+            modelBuilder.Entity<TransaccionesImagenes>()
+                .HasKey(p => new
+                {
+                    p.RepCodigo,
+                    p.TitID,
+                    p.TraSecuencia,
+                    p.triposicion,
+                });
+
+            modelBuilder.Entity<TransaccionesImagenesTablas>()
+                .HasKey(p => new
+                {
+                    p.RepCodigo,
+                    p.RepTabla,
+                    p.RepTablaKey,
+                    p.TraPosicion,
+                });
+
+            modelBuilder.Entity<UsosMultiples>()
+                .HasKey(p => new
+                {
+                    p.CodigoGrupo,
+                    p.CodigoUso,
+                });
+
+            modelBuilder.Entity<UsuariosSistemaParametros>()
+                .HasKey(p => new
+                {
+                    p.UsuInicioSesionPK,
+                    p.ParReferencia,
+                });
+
+            modelBuilder.Entity<PedidosDescuentosConfirmados>().
+                HasKey(p => new
+                {
+                    p.RepCodigo,
+                    p.PedSecuencia,
+                    p.PedPosicion,
+                    p.DesID,
+                });
+
+            modelBuilder.Entity<PedidosDescuentosHistoricos>().
+                HasKey(p => new
+                {
+                    p.RepCodigo,
+                    p.PedSecuencia,
+                    p.PedPosicion,
+                    p.DesID,
+                });
+        }
     }
 }

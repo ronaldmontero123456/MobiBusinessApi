@@ -79,7 +79,5 @@ namespace MovilBusinessApiCore.Models
         public string RepSupervisor { get; set; }
 
         public decimal? PedFlete { get; set; }
-
-        public virtual PedidosHistoricos PedidosHistoricos { get; set; }
     }
 }

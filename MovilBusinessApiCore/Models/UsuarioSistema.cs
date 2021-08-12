@@ -12,25 +12,7 @@ namespace MovilBusinessApiCore.Models
     public partial class UsuarioSistema
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
-        public UsuarioSistema()
-        {
-            Estados = new HashSet<Estados>();
-            Parametros = new HashSet<Parametros>();
-            Pedidos = new HashSet<Pedidos>();
-            PedidosDetalle = new HashSet<PedidosDetalle>();
-            PedidosDetalleConfirmados = new HashSet<PedidosDetalleConfirmados>();
-            PedidosPresentacion = new HashSet<PedidosPresentacion>();
-            Presupuestos = new HashSet<Presupuestos>();
-            Presupuestos1 = new HashSet<Presupuestos>();
-            PresupuestosHistoricos = new HashSet<PresupuestosHistoricos>();
-            Replicaciones = new HashSet<Replicaciones>();
-            ReplicacionesTablas = new HashSet<ReplicacionesTablas>();
-            Representantes = new HashSet<Representantes>();
-            RepresentantesDetalle = new HashSet<RepresentantesDetalle>();
-            RepresentantesParametros = new HashSet<RepresentantesParametros>();
-            TransaccionesFirmas = new HashSet<TransaccionesFirmas>();
-            UsosMultiples = new HashSet<UsosMultiples>();
-        }
+        public UsuarioSistema(){}
 
         [Key]
         [StringLength(64)]
@@ -71,54 +53,6 @@ namespace MovilBusinessApiCore.Models
         public bool? UsuFiltrarClientes { get; set; }
 
         public Guid rowguid { get; set; }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<Estados> Estados { get; set; }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<Parametros> Parametros { get; set; }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<Pedidos> Pedidos { get; set; }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<PedidosDetalle> PedidosDetalle { get; set; }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<PedidosDetalleConfirmados> PedidosDetalleConfirmados { get; set; }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<PedidosPresentacion> PedidosPresentacion { get; set; }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<Presupuestos> Presupuestos { get; set; }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<Presupuestos> Presupuestos1 { get; set; }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<PresupuestosHistoricos> PresupuestosHistoricos { get; set; }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<Replicaciones> Replicaciones { get; set; }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<ReplicacionesTablas> ReplicacionesTablas { get; set; }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<Representantes> Representantes { get; set; }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<RepresentantesDetalle> RepresentantesDetalle { get; set; }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<RepresentantesParametros> RepresentantesParametros { get; set; }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<TransaccionesFirmas> TransaccionesFirmas { get; set; }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<UsosMultiples> UsosMultiples { get; set; }
 
         public static bool Exists(string usuInicioSesion, string usuClave, MBContext db)
         {

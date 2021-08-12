@@ -8,11 +8,6 @@ namespace MovilBusinessApiCore.Models
 
     public partial class ReplicacionesSuscriptores
     {
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
-        public ReplicacionesSuscriptores()
-        {
-            ReplicacionesSuscriptoresCambios = new HashSet<ReplicacionesSuscriptoresCambios>();
-        }
 
         [Key]
         [Column(Order = 0)]
@@ -38,7 +33,5 @@ namespace MovilBusinessApiCore.Models
 
         public Guid rowguid { get; set; }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<ReplicacionesSuscriptoresCambios> ReplicacionesSuscriptoresCambios { get; set; }
     }
 }

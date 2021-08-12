@@ -31,6 +31,5 @@ namespace MovilBusinessApiCore.Models
 
         public DateTime? RepFechaActualizacion { get; set; }
 
-        public virtual UsuarioSistema UsuarioSistema { get; set; }
     }
 }

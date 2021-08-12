@@ -33,6 +33,7 @@ namespace MovilBusinessApiCore
                 .AddDebug()
                 .AddFilter(DbLoggerCategory.Database.Command.Name, LogLevel.Information)
             );
+            services.AddControllers().AddNewtonsoftJson();
 
             services.AddControllers();
             services.AddSwaggerGen(c =>

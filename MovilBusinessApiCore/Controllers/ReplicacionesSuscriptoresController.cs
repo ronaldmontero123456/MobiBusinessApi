@@ -9,7 +9,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -37,8 +37,8 @@ namespace MovilBusinessApiCore.Controllers
 
 
         [HttpPost]
-        [Route("api/ReplicacionesSuscriptores/VerificarSuscriptor")]
-        public async Task<IActionResult> VerificarSuscriptor([FromBody]UsuarioArgs args)
+        [Route("VerificarSuscriptor")]
+        public IActionResult VerificarSuscriptor([FromBody]UsuarioArgs args)
         {
             var writeLog = false;
 
@@ -60,16 +60,14 @@ namespace MovilBusinessApiCore.Controllers
                     return BadRequest("El key del suscriptor no puede estar vacio!");
                 }
 
-                using (MBContext db = new MBContext())
-                {
-                    writeLog = db.Parametros.Where(x => x.ParReferencia.Trim().ToUpper() == "WRITELOG" && x.ParValor.Trim() == "1").FirstOrDefault() != null;
+                writeLog = _context.Parametros.Where(x => x.ParReferencia.Trim().ToUpper() == "WRITELOG" && x.ParValor.Trim() == "1").FirstOrDefault() != null;
 
-                    if (!UsuarioSistema.Exists(args.RepCodigo, args.RepClave, db))
+                    if (!UsuarioSistema.Exists(args.RepCodigo, args.RepClave, _context))
                     {
                         return BadRequest("Usuario o contraseña invalidos");
                     }
 
-                    var suscriptor = db.ReplicacionesSuscriptores.Where(x => x.UsuInicioSesion == args.RepCodigo && x.RepSuscriptor.ToString().Substring(0, 8) == args.Suscriptor).FirstOrDefault();
+                    var suscriptor = _context.ReplicacionesSuscriptores.Where(x => x.UsuInicioSesion == args.RepCodigo && x.RepSuscriptor.ToString().Substring(0, 8) == args.Suscriptor).FirstOrDefault();
 
                     if (suscriptor == null)
                     {
@@ -83,30 +81,29 @@ namespace MovilBusinessApiCore.Controllers
 
                     if (suscriptor.RsuTipo == 1)
                     {
-                        VerificarLicencia(db);
+                        VerificarLicencia(_context);
                     }
 
-                    SqlConnection conn = (SqlConnection)(db.Database.GetDbConnection());
+                    SqlConnection conn = (SqlConnection)_context.Database.GetDbConnection();
+                
+                    if (conn.State != ConnectionState.Open)
+                        conn.Open();
+
                     SqlCommand cmd = new SqlCommand("[sp_MDSOFTGeneraCargaInicialSuscriptoresCambios] @RepID, @RepSuscriptor", conn)
                     {
                         CommandTimeout = 300
                     };
 
-                    if (conn.State != ConnectionState.Open)
-                        conn.Open();
+                    cmd.Parameters.AddWithValue("@RepID", suscriptor.RepID);
+                    cmd.Parameters.AddWithValue("@RepSuscriptor", suscriptor.RepSuscriptor.ToString());
 
-                    cmd.Parameters.AddRange(
-                         new SqlParameter[] {
-                         new SqlParameter() { ParameterName = "@RepID", SqlDbType = System.Data.SqlDbType.Int, Value = suscriptor.RepID },
-                         new SqlParameter() { ParameterName = "@RepSuscriptor", SqlDbType = System.Data.SqlDbType.VarChar, Size = int.MaxValue, Value = suscriptor.RepSuscriptor.ToString()}}
-                         );
                     suscriptor.resEstado = 3;
-
-                    await cmd.ExecuteNonQueryAsync();
+                    _context.SaveChanges();
+                    cmd.ExecuteNonQuery();
 
                     var query = string.Format("SELECT COUNT(RepID) AS Value FROM [ReplicacionesSuscriptoresCambios{0}] with(nolock)", suscriptor.RepSuscriptor.ToString());
-
-                    var currentTransaction = db.Database.CurrentTransaction;
+                    cmd.CommandText = query;
+                    var currentTransaction = _context.Database.CurrentTransaction;
                     cmd.Transaction = currentTransaction != null ? (SqlTransaction)currentTransaction.GetDbTransaction() : cmd.Transaction;
 
                     SqlDataAdapter adapt = new SqlDataAdapter(cmd);
@@ -122,7 +119,7 @@ namespace MovilBusinessApiCore.Controllers
                     int cambios = (int)result.Rows[0].ItemArray.GetValue(0);
 
                     return Ok(new VerificarSuscriptorResult() { RepSuscriptor = suscriptor.RepSuscriptor.ToString(), CantidadCambios = cambios });
-                }           
+                          
             }
             catch (Exception e)
             {
@@ -170,7 +167,7 @@ namespace MovilBusinessApiCore.Controllers
         }
 
         [HttpPost]
-        [Route("api/ReplicacionesSuscriptores/VerificarSuscriptorLegacy")]
+        [Route("VerificarSuscriptorLegacy")]
         public async Task<IActionResult> VerificarSuscriptorLegacy([FromBody]UsuarioArgs args)
         {
             var writeLog = false;
@@ -227,18 +224,16 @@ namespace MovilBusinessApiCore.Controllers
                     if (conn.State != ConnectionState.Open)
                         conn.Open();
 
-                    cmd.Parameters.AddRange(
-                         new SqlParameter[] {
-                         new SqlParameter() { ParameterName = "@RepID", SqlDbType = System.Data.SqlDbType.Int, Value = suscriptor.RepID },
-                         new SqlParameter() { ParameterName = "@RepSuscriptor", SqlDbType = System.Data.SqlDbType.VarChar, Size = int.MaxValue, Value = suscriptor.RepSuscriptor.ToString()}}
-                         );
-                    suscriptor.resEstado = 3;
+                    cmd.Parameters.AddWithValue("@RepID", suscriptor.RepID);
+                    cmd.Parameters.AddWithValue("@RepSuscriptor", suscriptor.RepSuscriptor.ToString());
 
+                    suscriptor.resEstado = 3;
+                    _context.SaveChanges();
                     await cmd.ExecuteNonQueryAsync();
 
 
-                    var query = string.Format($"SELECT COUNT(RepID) AS Value FROM [ReplicacionesSuscriptoresCambios] with(nolock) where RepSuscriptor = '{suscriptor.RepSuscriptor}'");                    
-
+                    var query = string.Format($"SELECT COUNT(RepID) AS Value FROM [ReplicacionesSuscriptoresCambios] with(nolock) where RepSuscriptor = '{suscriptor.RepSuscriptor}'");
+                    cmd.CommandText = query;
                     var currentTransaction = _context.Database.CurrentTransaction;
                     cmd.Transaction = currentTransaction != null ? (SqlTransaction)currentTransaction.GetDbTransaction() : cmd.Transaction;
 
@@ -275,19 +270,16 @@ namespace MovilBusinessApiCore.Controllers
         }
 
         [HttpPost]
-        [Route("api/ReplicacionesSuscriptores/ReplicacionesTablasLeer")]
+        [Route("ReplicacionesTablasLeer")]
         public IActionResult ReplicacionesTablasLeer([FromBody] ReplicacionesTablasLeerArgs args)
         {
             var writeLog = false;
 
             try
             {
+                    writeLog = _context.Parametros.Where(x => x.ParReferencia.Trim().ToUpper() == "WRITELOG" && x.ParValor.Trim() == "1").FirstOrDefault() != null;
 
-                using (MBContext db = new MBContext())
-                {
-                    writeLog = db.Parametros.Where(x => x.ParReferencia.Trim().ToUpper() == "WRITELOG" && x.ParValor.Trim() == "1").FirstOrDefault() != null;
-
-                    if (!UsuarioSistema.Exists(args.RepCodigo, args.RepClave, db))
+                    if (!UsuarioSistema.Exists(args.RepCodigo, args.RepClave, _context))
                     {
                         if (writeLog)
                         {
@@ -297,18 +289,17 @@ namespace MovilBusinessApiCore.Controllers
                         return BadRequest("Este usuario no existe en los usuarios del sistema");
                     }
 
-                    var replicacion = db.Replicaciones.Where(x => x.RepNombre == args.RepNombre).FirstOrDefault();
+                    var replicacion = _context.Replicaciones.Where(x => x.RepNombre == args.RepNombre).FirstOrDefault();
 
                     if (replicacion == null)
                     {
                         return BadRequest("La Replicacion solicitada no existe");
                     }
 
-                    var list = db.ReplicacionesTablas.Where(x => x.RepID == replicacion.RepID).ToList();
+                    var list = _context.ReplicacionesTablas.Where(x => x.RepID == replicacion.RepID).ToList();
 
                     return Ok(list);
 
-                }
 
             }
             catch (Exception e)
@@ -318,19 +309,16 @@ namespace MovilBusinessApiCore.Controllers
         }
 
         [HttpPost]
-        [Route("api/ReplicacionesSuscriptores/ReplicacionesTablasLeerNew")]
+        [Route("ReplicacionesTablasLeerNew")]
         public IActionResult ReplicacionesTablasLeerNew([FromBody] ReplicacionesTablasLeerArgs args)
         {
             var writeLog = false;
 
             try
             {
+                    writeLog = _context.Parametros.Where(x => x.ParReferencia.Trim().ToUpper() == "WRITELOG" && x.ParValor.Trim() == "1").FirstOrDefault() != null;
 
-                using (MBContext db = new MBContext())
-                {
-                    writeLog = db.Parametros.Where(x => x.ParReferencia.Trim().ToUpper() == "WRITELOG" && x.ParValor.Trim() == "1").FirstOrDefault() != null;
-
-                    if (!UsuarioSistema.Exists(args.RepCodigo, args.RepClave, db))
+                    if (!UsuarioSistema.Exists(args.RepCodigo, args.RepClave, _context))
                     {
                         if (writeLog)
                         {
@@ -340,18 +328,17 @@ namespace MovilBusinessApiCore.Controllers
                         return BadRequest("Este usuario no existe en los usuarios del sistema");
                     }
 
-                    var suscriptor = db.ReplicacionesSuscriptores.Where(x => x.RepSuscriptor.ToString().Trim().ToUpper() == args.RepSuscriptor.Trim().ToUpper()).FirstOrDefault();
+                    var suscriptor = _context.ReplicacionesSuscriptores.Where(x => x.RepSuscriptor.ToString().Trim().ToUpper() == args.RepSuscriptor.Trim().ToUpper()).FirstOrDefault();
 
                     if (suscriptor == null)
                     {
                         return BadRequest("La Replicacion solicitada no existe");
                     }
 
-                    var list = db.ReplicacionesTablas.Where(x => x.RepID == suscriptor.RepID).ToList();
+                    var list = _context.ReplicacionesTablas.Where(x => x.RepID == suscriptor.RepID).ToList();
 
                     return Ok(list);
 
-                }
 
             }
             catch (Exception e)
@@ -362,8 +349,8 @@ namespace MovilBusinessApiCore.Controllers
 
 
         [HttpPost]
-        [Route("api/ReplicacionesSuscriptores/ExecuteQuery")]
-        public IActionResult ExecuteQuery([FromBody] ExecuteQueryArgs args)
+        [Route("ExecuteQuery")]
+        public async Task<IActionResult> ExecuteQuery([FromBody] ExecuteQueryArgs args)
         {
             if (args == null || args.Values == null || args.User == null)
             {
@@ -374,9 +361,7 @@ namespace MovilBusinessApiCore.Controllers
 
             try
             {
-                using (MBContext db = new MBContext())
-                {
-                    writeLog = db.Parametros.Where(x => x.ParReferencia.Trim().ToUpper() == "WRITELOG" && x.ParValor.Trim() == "1").FirstOrDefault() != null;
+                    writeLog = _context.Parametros.Where(x => x.ParReferencia.Trim().ToUpper() == "WRITELOG" && x.ParValor.Trim() == "1").FirstOrDefault() != null;
                     var noValidarSuscriptor = writeLog;
 
                     if (writeLog)
@@ -385,7 +370,7 @@ namespace MovilBusinessApiCore.Controllers
                         $"ConFecha: {DateTime.Now.ToString("dd/MM/yyyy")}");
                     }
 
-                    if (!UsuarioSistema.Exists(args.User.RepCodigo, args.User.RepClave, db))
+                    if (!UsuarioSistema.Exists(args.User.RepCodigo, args.User.RepClave, _context))
                     {
                         if (writeLog)
                         {
@@ -398,7 +383,7 @@ namespace MovilBusinessApiCore.Controllers
 
                     if (!noValidarSuscriptor)
                     {
-                        var suscriptorn = db.ReplicacionesSuscriptores.Where(x => x.UsuInicioSesion.Trim() == args.User.RepCodigo.Trim() && x.RepSuscriptor.ToString() == args.User.Suscriptor).FirstOrDefault();                        
+                        var suscriptorn = _context.ReplicacionesSuscriptores.Where(x => x.UsuInicioSesion.Trim() == args.User.RepCodigo.Trim() && x.RepSuscriptor.ToString() == args.User.Suscriptor).FirstOrDefault();                        
 
                         if (suscriptorn != null)
                         {
@@ -420,40 +405,22 @@ namespace MovilBusinessApiCore.Controllers
 
                     try
                     {
-                        try
+                        SqlConnection conn = (SqlConnection)(_context.Database.GetDbConnection());                            
+                        conn.Open();
+                        foreach (ExecuteQueryValues value in args.Values)
                         {
-                            SqlConnection conn = (SqlConnection)(db.Database.GetDbConnection());
-                            SqlCommand cmd = new SqlCommand("[sp_MDSOFTGeneraCargaInicialSuscriptoresCambios] @RepID, @RepSuscriptor", conn)
+                            SqlCommand cmd = new SqlCommand("[sp_wsExecQuery] @query", conn)
                             {
-                                CommandTimeout = 300
+                                CommandTimeout = 600
                             };
-                            conn.Open();
-                            foreach (ExecuteQueryValues value in args.Values)
-                            {
-                                cmd.CommandText = "[sp_MDSOFTGeneraCargaInicialSuscriptoresCambios] @RepID, @RepSuscriptor";
-                                cmd.Parameters.AddWithValue("@query", value.Query);
-                                cmd.ExecuteNonQuery();
-                            }
-                            conn.Close();
+                            cmd.Parameters.AddWithValue("@query", value.Query);
+                            await cmd.ExecuteNonQueryAsync();
                         }
-                        catch (Exception e)
-                        {
-                            throw e;
-                        }
+                           conn.Close();
                     }
                     catch (Exception e)
                     {
                         string msgError = e.Message;
-
-                        if (writeLog)
-                        {
-                            if (e.InnerException != null)
-                            {
-                                msgError += Environment.NewLine + "InnerException: " + e.InnerException.Message;
-                            }
-
-                            Functions.WriteLog(args.User.RepCodigo, $"ExecuteQuery(). Error: { msgError}, CurrentScript: {CurrentScript}, QueryList:  { JsonConvert.SerializeObject(args.Values) }");
-                        }
 
                         if (e is SqlException)
                         {
@@ -480,8 +447,8 @@ namespace MovilBusinessApiCore.Controllers
 
                                 Guid.TryParse(args.User.Suscriptor, out Guid guid);
                                 conflicto.RepSuscriptor = guid;
-                                db.ReplicacionesSuscriptoresConflictos.Add(conflicto);
-                                db.SaveChanges();
+                                _context.ReplicacionesSuscriptoresConflictos.Add(conflicto);
+                                _context.SaveChanges();
 
                             }
                             catch (Exception ex)
@@ -492,7 +459,6 @@ namespace MovilBusinessApiCore.Controllers
 
                         throw e;
                     }
-                }
 
                 return Ok();
 
@@ -516,23 +482,21 @@ namespace MovilBusinessApiCore.Controllers
         }
 
         [HttpPost]
-        [Route("api/ReplicacionesSuscriptores/SuscriptoresCambiosLeer")]
+        [Route("SuscriptoresCambiosLeer")]
         public async Task<IActionResult> SuscriptoresCambiosLeer([FromBody] ReplicacionesSuscriptoresCambiosLeerArgs args)
         {
             var writeLog = false;
 
             try
             {
-                using (MBContext db = new MBContext())
-                {
-                    writeLog = db.Parametros.Where(x => x.ParReferencia.Trim().ToUpper() == "WRITELOG" && x.ParValor.Trim() == "1").FirstOrDefault() != null;
+                    writeLog = _context.Parametros.Where(x => x.ParReferencia.Trim().ToUpper() == "WRITELOG" && x.ParValor.Trim() == "1").FirstOrDefault() != null;
 
                     if (writeLog)
                     {
                         Functions.WriteLog(args.User.RepCodigo, $"SuscriptoresCambiosLeer() - Iniciado. RepSuscriptor: {args.User.Suscriptor}");
                     }
 
-                    if (!UsuarioSistema.Exists(args.User.RepCodigo, args.User.RepClave, db))
+                    if (!UsuarioSistema.Exists(args.User.RepCodigo, args.User.RepClave, _context))
                     {
                         if (writeLog)
                         {
@@ -541,7 +505,7 @@ namespace MovilBusinessApiCore.Controllers
                         return BadRequest("No existe este usuario en los usuarios del sistema.");
                     }
 
-                    var suscriptor = db.ReplicacionesSuscriptores.Where(x => x.UsuInicioSesion == args.User.RepCodigo && x.RepSuscriptor.ToString() == args.User.Suscriptor).FirstOrDefault();
+                    var suscriptor = _context.ReplicacionesSuscriptores.Where(x => x.UsuInicioSesion == args.User.RepCodigo && x.RepSuscriptor.ToString() == args.User.Suscriptor).FirstOrDefault();
 
                     if (suscriptor == null)
                     {
@@ -554,10 +518,11 @@ namespace MovilBusinessApiCore.Controllers
                     }
 
 
-                    SqlConnection conn = (SqlConnection)(db.Database.GetDbConnection());
+                    SqlConnection conn = (SqlConnection)(_context.Database.GetDbConnection());
 
                     if (!string.IsNullOrWhiteSpace(args.DeleteQuery))
                     {
+                        conn.Open();
                         SqlCommand cmd = new SqlCommand("[sp_wsExecQuery] @query", conn)
                         {
                             CommandTimeout = 300
@@ -565,41 +530,34 @@ namespace MovilBusinessApiCore.Controllers
 
                         cmd.Parameters.AddWithValue("@query", args.DeleteQuery);
                         await cmd.ExecuteNonQueryAsync();
+                        conn.Close();
                     }
 
                     var query = string.Format("select top({0}) RscKey, RepID, RscTabla, RscTipTran, RscFechaActualizacion, RscScript, RscTablarowguid, UsuInicioSesion, RepSuscriptor from [ReplicacionesSuscriptoresCambios{1}] with(nolock) WHERE RscTipTran <> 'F' order by RscFechaActualizacion ASC, rscTabla ", args.Limit, args.User.Suscriptor);
 
+                    SqlConnection connection = (SqlConnection)_context.Database.GetDbConnection();
 
-                    var currentTransaction = db.Database.CurrentTransaction;
-                    SqlCommand command1 = new SqlCommand(query, conn)
-                    {
-                        CommandTimeout = 300
-                    };
-                    command1.Transaction = currentTransaction != null ? (SqlTransaction)currentTransaction.GetDbTransaction() : command1.Transaction;
+                    DataTable dataSet = new DataTable();
 
-                    SqlDataAdapter adapt = new SqlDataAdapter(command1);
-                    DataTable result = new DataTable();
+                    SqlDataAdapter adapter = new SqlDataAdapter(query, connection);
 
-                    adapt.Fill(result);
+                    adapter.Fill(dataSet);
 
-                    conn.Close();
+                    return Ok(dataSet);
 
-                    var list = (ReplicacionesSuscriptoresCambios)result.Rows.AsQueryable();
-
-
-                    if (writeLog && list == null)
+                    if (writeLog && dataSet == null)
                     {
                         Functions.WriteLog(args.User.RepCodigo, $"SuscriptoresCambiosLeer(). No existen mas cambios en la tabla de SuscriptoresCambios. RepCodigo: {args.User.RepCodigo}, RepSuscriptor: {args.User.Suscriptor}");
                     }
+
 
                     if (writeLog)
                     {
                         Functions.WriteLog(args.User.RepCodigo, $"SuscriptoresCambiosLeer(). Fin. RepCodigo: {args.User.RepCodigo}, RepSuscriptor: {args.User.Suscriptor}");
                     }
 
-                    return Ok(list);
+                    return Ok(dataSet);
 
-                }
             }
             catch (Exception e)
             {
@@ -621,23 +579,21 @@ namespace MovilBusinessApiCore.Controllers
         }
 
         [HttpPost]
-        [Route("api/ReplicacionesSuscriptores/SuscriptoresCambiosLeerV8")]
+        [Route("SuscriptoresCambiosLeerV8")]
         public IActionResult SuscriptoresCambiosLeerV8([FromBody] ReplicacionesSuscriptoresCambiosLeerArgs args)
         {
             var writeLog = false;
 
             try
             {
-                using (MBContext db = new MBContext())
-                {
-                    writeLog = db.Parametros.Where(x => x.ParReferencia.Trim().ToUpper() == "WRITELOG" && x.ParValor.Trim() == "1").FirstOrDefault() != null;
+                    writeLog = _context.Parametros.Where(x => x.ParReferencia.Trim().ToUpper() == "WRITELOG" && x.ParValor.Trim() == "1").FirstOrDefault() != null;
 
                     if (writeLog)
                     {
                         Functions.WriteLog(args.User.RepCodigo, $"SuscriptoresCambiosLeer() - Iniciado. RepSuscriptor: {args.User.Suscriptor}");
                     }
 
-                    if (!UsuarioSistema.Exists(args.User.RepCodigo, args.User.RepClave, db))
+                    if (!UsuarioSistema.Exists(args.User.RepCodigo, args.User.RepClave, _context))
                     {
                         if (writeLog)
                         {
@@ -646,7 +602,7 @@ namespace MovilBusinessApiCore.Controllers
                         return BadRequest("No existe este usuario en los usuarios del sistema.");
                     }
 
-                    var suscriptor = db.ReplicacionesSuscriptores.Where(x => x.UsuInicioSesion == args.User.RepCodigo && x.RepSuscriptor.ToString() == args.User.Suscriptor).FirstOrDefault();
+                    var suscriptor = _context.ReplicacionesSuscriptores.Where(x => x.UsuInicioSesion == args.User.RepCodigo && x.RepSuscriptor.ToString() == args.User.Suscriptor).FirstOrDefault();
 
                     if (suscriptor == null)
                     {
@@ -658,17 +614,19 @@ namespace MovilBusinessApiCore.Controllers
                         return BadRequest("No existe el suscriptor solicitado");
                     }
 
-                    SqlConnection conn = (SqlConnection)(db.Database.GetDbConnection());
+                    SqlConnection conn = (SqlConnection)(_context.Database.GetDbConnection());
                     conn.Open();
 
                     if (!string.IsNullOrWhiteSpace(args.DeleteQuery))
                     {
+                        conn.Open();
                         SqlCommand command = new SqlCommand("[sp_wsExecQuery] @query", conn)
                         {
                             CommandTimeout = 300
                         };
                         command.Parameters.AddWithValue("@query", args.DeleteQuery);
                         command.ExecuteNonQuery();
+                        conn.Close();
                     }
 
                     string query = "";
@@ -681,7 +639,7 @@ namespace MovilBusinessApiCore.Controllers
                         query = $"select top({args.Limit}) RscKey, RscScript from [ReplicacionesSuscriptoresCambios{args.User.Suscriptor}] with(nolock) WHERE RscTipTran <> 'F'";
                     }
 
-                    var currentTransaction = db.Database.CurrentTransaction;
+                    var currentTransaction = _context.Database.CurrentTransaction;
                     SqlCommand command1 = new SqlCommand(query, conn)
                     {
                         CommandTimeout = 300
@@ -695,9 +653,14 @@ namespace MovilBusinessApiCore.Controllers
 
                     conn.Close();
 
-                    var list = (ReplicacionesSuscriptoresCambios)result.Rows.AsQueryable();
+                var list = (from DataRow dr in result.Rows
+                            select new ReplicacionesSuscriptoresCambiosV8()
+                            {
+                                RscKey = (Guid)dr["RscKey"],
+                                RscScript = dr["RscScript"].ToString(),
+                            }).AsQueryable();
 
-                    if (writeLog && list == null)
+                if (writeLog && list == null)
                     {
                         Functions.WriteLog(args.User.RepCodigo, $"SuscriptoresCambiosLeer(). No existen mas cambios en la tabla de SuscriptoresCambios. RepCodigo: {args.User.RepCodigo}, RepSuscriptor: {args.User.Suscriptor}");
                     }
@@ -708,7 +671,6 @@ namespace MovilBusinessApiCore.Controllers
                     }
 
                     return Ok(list);
-                }
             }
             catch (Exception e)
             {
@@ -724,23 +686,21 @@ namespace MovilBusinessApiCore.Controllers
 
 
         [HttpPost]
-        [Route("api/ReplicacionesSuscriptores/SuscriptoresCambiosLeerV9")]
+        [Route("SuscriptoresCambiosLeerV9")]
         public IActionResult SuscriptoresCambiosLeerV9([FromBody] ReplicacionesSuscriptoresCambiosLeerArgs args)
         {
             var writeLog = false;
 
             try
             {
-                using (MBContext db = new MBContext())
-                {
-                    writeLog = db.Parametros.Where(x => x.ParReferencia.Trim().ToUpper() == "WRITELOG" && x.ParValor.Trim() == "1").FirstOrDefault() != null;
+                    writeLog = _context.Parametros.Where(x => x.ParReferencia.Trim().ToUpper() == "WRITELOG" && x.ParValor.Trim() == "1").FirstOrDefault() != null;
 
                     if (writeLog)
                     {
                         Functions.WriteLog(args.User.RepCodigo, $"SuscriptoresCambiosLeer() - Iniciado. RepSuscriptor: {args.User.Suscriptor}");
                     }
 
-                    if (!UsuarioSistema.Exists(args.User.RepCodigo, args.User.RepClave, db))
+                    if (!UsuarioSistema.Exists(args.User.RepCodigo, args.User.RepClave, _context))
                     {
                         if (writeLog)
                         {
@@ -749,7 +709,7 @@ namespace MovilBusinessApiCore.Controllers
                         return BadRequest("No existe este usuario en los usuarios del sistema.");
                     }
 
-                    var suscriptor = db.ReplicacionesSuscriptores.Where(x => x.UsuInicioSesion == args.User.RepCodigo && x.RepSuscriptor.ToString() == args.User.Suscriptor).FirstOrDefault();
+                    var suscriptor = _context.ReplicacionesSuscriptores.Where(x => x.UsuInicioSesion == args.User.RepCodigo && x.RepSuscriptor.ToString() == args.User.Suscriptor).FirstOrDefault();
 
                     if (suscriptor == null)
                     {
@@ -761,17 +721,19 @@ namespace MovilBusinessApiCore.Controllers
                         return BadRequest("No existe el suscriptor solicitado");
                     }
 
-                    SqlConnection conn = (SqlConnection)(db.Database.GetDbConnection());
+                    SqlConnection conn = (SqlConnection)(_context.Database.GetDbConnection());
                     conn.Open();
 
                     if (!string.IsNullOrWhiteSpace(args.DeleteQuery))
                     {
+                        conn.Open();
                         SqlCommand command = new SqlCommand("[sp_wsExecQuery] @query", conn)
                         {
                             CommandTimeout = 300
                         };
                         command.Parameters.AddWithValue("@query", args.DeleteQuery);
                         command.ExecuteNonQuery();
+                        conn.Close();
                     }
 
                     string query = "";
@@ -784,7 +746,7 @@ namespace MovilBusinessApiCore.Controllers
                         query = $"select top({args.Limit}) RscKey, RscScript from [ReplicacionesSuscriptoresCambios{args.User.Suscriptor}] with(nolock) WHERE RscTipTran <> 'F' order by RscConTranID";
                     }
 
-                    var currentTransaction = db.Database.CurrentTransaction;
+                    var currentTransaction = _context.Database.CurrentTransaction;
                     SqlCommand command1 = new SqlCommand(query, conn)
                     {
                         CommandTimeout = 300
@@ -798,7 +760,12 @@ namespace MovilBusinessApiCore.Controllers
 
                     conn.Close();
 
-                    var list = (ReplicacionesSuscriptoresCambios)result.Rows.AsQueryable();
+                var list = (from DataRow dr in result.Rows
+                            select new ReplicacionesSuscriptoresCambiosV8()
+                            {
+                                RscKey = (Guid)dr["RscKey"],
+                                RscScript = dr["RscScript"].ToString(),
+                            }).AsQueryable();
 
                     if (writeLog && list == null)
                     {
@@ -811,7 +778,6 @@ namespace MovilBusinessApiCore.Controllers
                     }
 
                     return Ok(list);
-                }
             }
             catch (Exception e)
             {
@@ -826,23 +792,21 @@ namespace MovilBusinessApiCore.Controllers
         }
 
         [HttpPost]
-        [Route("api/ReplicacionesSuscriptores/SuscriptoresCambiosLeerLegacy")]
+        [Route("SuscriptoresCambiosLeerLegacy")]
         public IActionResult SuscriptoresCambiosLeerLegacy([FromBody] ReplicacionesSuscriptoresCambiosLeerArgs args)
         {
             var writeLog = false;
 
             try
             {
-                using (MBContext db = new MBContext())
-                {
-                    writeLog = db.Parametros.Where(x => x.ParReferencia.Trim().ToUpper() == "WRITELOG" && x.ParValor.Trim() == "1").FirstOrDefault() != null;
+                    writeLog = _context.Parametros.Where(x => x.ParReferencia.Trim().ToUpper() == "WRITELOG" && x.ParValor.Trim() == "1").FirstOrDefault() != null;
 
                     if (writeLog)
                     {
                         Functions.WriteLog(args.User.RepCodigo, $"SuscriptoresCambiosLeerLegacy() - Iniciado. RepSuscriptor: {args.User.Suscriptor}");
                     }
 
-                    if (!UsuarioSistema.Exists(args.User.RepCodigo, args.User.RepClave, db))
+                    if (!UsuarioSistema.Exists(args.User.RepCodigo, args.User.RepClave, _context))
                     {
                         if (writeLog)
                         {
@@ -852,7 +816,7 @@ namespace MovilBusinessApiCore.Controllers
                         return BadRequest("No existe este usuario en los usuarios del sistema.");
                     }
 
-                    var suscriptor = db.ReplicacionesSuscriptores.Where(x => x.UsuInicioSesion.Trim() == args.User.RepCodigo.Trim() && x.RepSuscriptor.ToString().Trim().ToUpper() == args.User.Suscriptor.Trim().ToUpper()).FirstOrDefault();
+                    var suscriptor = _context.ReplicacionesSuscriptores.Where(x => x.UsuInicioSesion.Trim() == args.User.RepCodigo.Trim() && x.RepSuscriptor.ToString().Trim().ToUpper() == args.User.Suscriptor.Trim().ToUpper()).FirstOrDefault();
 
                     if (suscriptor == null)
                     {
@@ -864,42 +828,39 @@ namespace MovilBusinessApiCore.Controllers
                         return BadRequest("No existe el suscriptor solicitado");
                     }
 
-
-                    SqlConnection conn = (SqlConnection)(db.Database.GetDbConnection());
-                    SqlCommand command = new SqlCommand("sp_wsPresupuestosCargarOnline", conn)
-                    {
-                        CommandTimeout = 300
-                    };
-                    conn.Open();
-
                     if (!string.IsNullOrWhiteSpace(args.DeleteQuery))
-                    {
-                        command.CommandText = "[sp_wsExecQuery] @query";
-                        command.Parameters.AddWithValue("@query", args.DeleteQuery);
-                        command.ExecuteNonQuery();
+                    {                                 
+                        SqlConnection conn = (SqlConnection)(_context.Database.GetDbConnection());
+                        conn.Open();
+                        SqlCommand command 
+                            = new SqlCommand("[sp_wsExecQuery] @query", conn)
+                            {
+                                CommandTimeout = 300
+                            };
+                    
+                            command.Parameters.AddWithValue("@query", args.DeleteQuery);
+                            command.ExecuteNonQuery();
+                           conn.Close();
                     }
 
-                    var query = string.Format($"select top({args.Limit}) RscKey, RepID, RscTabla, RscTipTran, RscFechaActualizacion, RscScript, RscTablarowguid, UsuInicioSesion, RepSuscriptor from [ReplicacionesSuscriptoresCambios] with(nolock) where RepSuscriptor = '{args.User.Suscriptor}' and RscTipTran <> 'F' order by RscFechaActualizacion ASC, rscTabla ");               
+                    var query = string.Format($"select top({args.Limit}) RscKey, RepID, RscTabla, RscTipTran, RscFechaActualizacion, RscScript, RscTablarowguid, UsuInicioSesion, RepSuscriptor from [ReplicacionesSuscriptoresCambios] with(nolock) where RepSuscriptor = '{args.User.Suscriptor}' and RscTipTran <> 'F' order by RscFechaActualizacion ASC, rscTabla ");
 
-                    var currentTransaction = db.Database.CurrentTransaction;
-                    command.Transaction = currentTransaction != null ? (SqlTransaction)currentTransaction.GetDbTransaction() : command.Transaction;
+                    SqlConnection connection = (SqlConnection)_context.Database.GetDbConnection();
 
-                    SqlDataAdapter adapt = new SqlDataAdapter(command);
-                    DataTable result = new DataTable();
+                    DataTable dataSet = new DataTable();
 
-                    adapt.Fill(result);
+                    SqlDataAdapter adapter = new SqlDataAdapter(query, connection);
 
-                    conn.Close();
+                    adapter.Fill(dataSet);
 
-                    var list = (ReplicacionesSuscriptoresCambios)result.Rows.AsQueryable();
+                    return Ok(dataSet);
 
-                    if (writeLog && list == null)
+                    if (writeLog && dataSet == null)
                     {
                         Functions.WriteLog(args.User.RepCodigo, $"SuscriptoresCambiosLeer(). No existen mas cambios en la tabla de SuscriptoresCambios. RepCodigo: {args.User.RepCodigo}, RepSuscriptor: {args.User.Suscriptor}");
                     }
 
-                    return Ok(list);
-                }
+                    return Ok(dataSet);
             }
             catch (Exception e)
             {
@@ -921,23 +882,20 @@ namespace MovilBusinessApiCore.Controllers
         }
 
         [HttpPost]
-        [Route("api/ReplicacionesSuscriptores/EmpresasCargar")]
+        [Route("EmpresasCargar")]
         public IActionResult EmpresasCargar([FromBody] UsuarioArgs args)
         {
             try
             {
-                using (MBContext db = new MBContext())
-                {
-                    if (!UsuarioSistema.Exists(args.RepCodigo, args.RepClave, db))
+                    if (!UsuarioSistema.Exists(args.RepCodigo, args.RepClave, _context))
                     {
                         //Functions.WriteLog(args.RepCodigo, $"ExecuteQuery(). No existe este usuario en los usuarios del sistema., UsuInicioSesion: {args.RepCodigo}.");
                         return BadRequest("No existe este usuario en los usuarios del sistema.");
                     }
 
-                    var list = db.Empresa.ToList();
+                    var list = _context.Empresa.ToList();
 
                     return Ok(list);
-                }
 
             }
             catch (Exception e)
@@ -948,7 +906,7 @@ namespace MovilBusinessApiCore.Controllers
         }
 
         [HttpPost]
-        [Route("api/ReplicacionesSuscriptores/ExecUpdate")]
+        [Route("ExecUpdate")]
         public IActionResult ExecUpdate([FromBody]ExecUpdateArgs args)
         {
             //string CurrentScript = "";
@@ -967,11 +925,9 @@ namespace MovilBusinessApiCore.Controllers
 
             try
             {
-                using (MBContext db = new MBContext())
-                {
-                    writeLog = db.Parametros.Where(x => x.ParReferencia.Trim().ToUpper() == "WRITELOG" && x.ParValor.Trim() == "1").FirstOrDefault() != null;
+                    writeLog = _context.Parametros.Where(x => x.ParReferencia.Trim().ToUpper() == "WRITELOG" && x.ParValor.Trim() == "1").FirstOrDefault() != null;
 
-                    if (!UsuarioSistema.Exists(args.User.RepCodigo, args.User.RepClave, db))
+                    if (!UsuarioSistema.Exists(args.User.RepCodigo, args.User.RepClave, _context))
                     {
                         if (writeLog)
                         {
@@ -983,7 +939,7 @@ namespace MovilBusinessApiCore.Controllers
 
                     try
                     {
-                        SqlConnection conn = (SqlConnection)(db.Database.GetDbConnection());
+                        SqlConnection conn = (SqlConnection)(_context.Database.GetDbConnection());
                         SqlCommand cmd = new SqlCommand("[sp_wsExecQuery] @query", conn)
                         {
                             CommandTimeout = 300
@@ -1009,8 +965,6 @@ namespace MovilBusinessApiCore.Controllers
                     }
 
                     return Ok();
-                }
-
             }
             catch (Exception e)
             {
@@ -1036,7 +990,7 @@ namespace MovilBusinessApiCore.Controllers
         }
 
         [HttpPost]
-        [Route("api/ReplicacionesSuscriptores/RawQuery")]
+        [Route("RawQuery")]
         public IActionResult RawQuery([FromBody]QueryArgs args)
         {
             var writeLog = false;
@@ -1053,16 +1007,14 @@ namespace MovilBusinessApiCore.Controllers
                     return BadRequest("El query a ejecutar contiene sentencias invalidas");
                 }
 
-                using (MBContext db = new MBContext())
-                {
-                    writeLog = db.Parametros.Where(x => x.ParReferencia.Trim().ToUpper() == "WRITELOG" && x.ParValor.Trim() == "1").FirstOrDefault() != null;
+                    writeLog = _context.Parametros.Where(x => x.ParReferencia.Trim().ToUpper() == "WRITELOG" && x.ParValor.Trim() == "1").FirstOrDefault() != null;
 
                     if (writeLog)
                     {
                         Functions.WriteLog(args.User.RepCodigo, "RawQuery() - Iniciando - RepCodigo: " + args.User.RepCodigo + ". EN Fecha: " + DateTime.Now.ToString("dd-MM-yyyy hh:mm:ss"));
                     }
 
-                    if (!UsuarioSistema.Exists(args.User.RepCodigo, args.User.RepClave, db))
+                    if (!UsuarioSistema.Exists(args.User.RepCodigo, args.User.RepClave, _context))
                     {
                         if (writeLog)
                         {
@@ -1072,16 +1024,15 @@ namespace MovilBusinessApiCore.Controllers
                         return BadRequest("No existe este usuario en los usuarios del sistema");
                     }
 
-                    SqlConnection connection = (SqlConnection)db.Database.GetDbConnection();
+                SqlConnection connection = (SqlConnection) _context.Database.GetDbConnection();
 
-                    DataTable dataSet = new DataTable();
+                DataTable dataSet = new DataTable();
 
-                    SqlDataAdapter adapter = new SqlDataAdapter(args.Query, connection);
+                SqlDataAdapter adapter = new SqlDataAdapter(args.Query, connection);
 
-                    adapter.Fill(dataSet);
+                adapter.Fill(dataSet);
 
-                    return Ok(dataSet);
-                }
+                return Ok(dataSet);
 
             }
             catch (Exception e)
@@ -1102,7 +1053,34 @@ namespace MovilBusinessApiCore.Controllers
             }
         }
 
-        [Route("api/ReplicacionesSuscriptores/CargarPresupuestosBySupervisorSync")]
+        
+        private List<T> DataTableToList<T>(DataTable table) where T : new()
+        {
+            List<T> list = new List<T>();
+            var typeProperties = typeof(T).GetProperties().Select(propertyInfo => new
+            {
+                PropertyInfo = propertyInfo,
+                Type = Nullable.GetUnderlyingType(propertyInfo.PropertyType) ?? propertyInfo.PropertyType
+            }).ToList();
+
+            foreach (var row in table.Rows.Cast<DataRow>())
+            {
+                T obj = new T();
+                foreach (var typeProperty in typeProperties)
+                {
+                    object value = row[typeProperty.PropertyInfo.Name];
+                    object safeValue = value == null || DBNull.Value.Equals(value)
+                        ? null
+                        : Convert.ChangeType(value, typeProperty.Type);
+
+                    typeProperty.PropertyInfo.SetValue(obj, safeValue, null);
+                }
+                list.Add(obj);
+            }
+            return list;
+        }
+
+        [Route("CargarPresupuestosBySupervisorSync")]
         [HttpPost]
         public IActionResult CargarPresupuestosBySupervisorSync([FromBody]PresupuestosArgs args)
         {
@@ -1110,13 +1088,11 @@ namespace MovilBusinessApiCore.Controllers
 
             try
             {
-                using (MBContext db = new MBContext())
-                {
-                    if (!UsuarioSistema.Exists(args.RepCodigo, args.RepClave, db))
+                    if (!UsuarioSistema.Exists(args.RepCodigo, args.RepClave, _context))
                     {
                         return BadRequest("No existe este usuario en los usuarios del sistema");
                     }
-                    SqlConnection conn = (SqlConnection)db.Database.GetDbConnection();
+                    SqlConnection conn = (SqlConnection)_context.Database.GetDbConnection();
                     SqlCommand command = new SqlCommand("sp_wsCargarPresupuestosSync", conn)
                     {
                         CommandTimeout = 300,
@@ -1160,8 +1136,6 @@ namespace MovilBusinessApiCore.Controllers
                     }
 
                     return Ok(result);
-                }
-
             }
             catch (Exception e)
             {
@@ -1170,7 +1144,7 @@ namespace MovilBusinessApiCore.Controllers
             }
         }
 
-        [Route("api/ReplicacionesSuscriptores/CoberturaConsultar")]
+        [Route("CoberturaConsultar")]
         [HttpPost]
         public IActionResult CoberturaConsultar([FromBody]CoberturaArgs args)
         {
@@ -1188,9 +1162,7 @@ namespace MovilBusinessApiCore.Controllers
                 try
                 {
 
-                    using (var db = new MBContext())
-                    {
-                        sqlConnection = (SqlConnection)db.Database.GetDbConnection();
+                        sqlConnection = (SqlConnection)_context.Database.GetDbConnection();
                         sqlConnection.Open();
                         sqlCommand = sqlConnection.CreateCommand();
                         sqlCommand.CommandType = CommandType.StoredProcedure;
@@ -1275,8 +1247,6 @@ namespace MovilBusinessApiCore.Controllers
 
                         //str = JsonConvert.SerializeObject(count);
                         return Ok(count);
-                    }
-
 
                 }
                 catch (Exception ex)
@@ -1304,7 +1274,7 @@ namespace MovilBusinessApiCore.Controllers
             return Ok();
         }
 
-        [Route("api/ReplicacionesSuscriptores/ImagenesInsertar")]
+        [Route("ImagenesInsertar")]
         [HttpPost]
         public IActionResult TransaccionesImagenesInsertar([FromBody] ImagenesInsertarArgs args)
         {
@@ -1317,11 +1287,9 @@ namespace MovilBusinessApiCore.Controllers
                     return Ok();
                 }
 
-                using (MBContext db = new MBContext())
-                {
-                    writeLog = db.Parametros.Where(x => x.ParReferencia.Trim().ToUpper() == "WRITELOG" && x.ParValor.Trim() == "1").FirstOrDefault() != null;
+                    writeLog = _context.Parametros.Where(x => x.ParReferencia.Trim().ToUpper() == "WRITELOG" && x.ParValor.Trim() == "1").FirstOrDefault() != null;
 
-                    if (!UsuarioSistema.Exists(args.User.RepCodigo, args.User.RepClave, db))
+                    if (!UsuarioSistema.Exists(args.User.RepCodigo, args.User.RepClave, _context))
                     {
                         if (writeLog)
                         {
@@ -1331,13 +1299,13 @@ namespace MovilBusinessApiCore.Controllers
                         return BadRequest("No existe este usuario en los usuarios del sistema.");
                     }
 
-                    var currentTransaction = db.Database.CurrentTransaction;
+                    var currentTransaction = _context.Database.CurrentTransaction;
 
                     try
                     {                        
                         foreach (TransaccionesImagenesTablasTemp img in args.Imagenes)
                         {
-                            SqlConnection conn = (SqlConnection)(db.Database.GetDbConnection());
+                            SqlConnection conn = (SqlConnection)(_context.Database.GetDbConnection());
                             SqlCommand cmd = new SqlCommand("sp_TransaccionesImagenesTablasInsertar", conn)
                             {
                                 CommandTimeout = 300
@@ -1370,8 +1338,6 @@ namespace MovilBusinessApiCore.Controllers
                         throw e;
                     }
 
-                }
-
                 return Ok();
             }
             catch (Exception e)
@@ -1392,7 +1358,7 @@ namespace MovilBusinessApiCore.Controllers
             }
         }
 
-        [Route("api/ReplicacionesSuscriptores/SuscriptoresCambiosLeerImagenes")]
+        [Route("SuscriptoresCambiosLeerImagenes")]
         [HttpPost]
         public IActionResult SuscriptoresCambiosLeerImagenes([FromBody] ReplicacionesSuscriptoresCambiosLeerArgs args)
         {
@@ -1400,21 +1366,19 @@ namespace MovilBusinessApiCore.Controllers
 
             try
             {
-                using (MBContext db = new MBContext())
-                {
-                    writeLog = db.Parametros.Where(x => x.ParReferencia.Trim().ToUpper() == "WRITELOG" && x.ParValor.Trim() == "1").FirstOrDefault() != null;
+                    writeLog = _context.Parametros.Where(x => x.ParReferencia.Trim().ToUpper() == "WRITELOG" && x.ParValor.Trim() == "1").FirstOrDefault() != null;
 
                     if (writeLog)
                     {
                         Functions.WriteLog(args.User.RepCodigo, $"SuscriptoresCambiosLeerImagenes() - Iniciado. RepSuscriptor: {args.User.Suscriptor}");
                     }
 
-                    if (!UsuarioSistema.Exists(args.User.RepCodigo, args.User.RepClave, db))
+                    if (!UsuarioSistema.Exists(args.User.RepCodigo, args.User.RepClave, _context))
                     {
                         return BadRequest("No existe este usuario en los usuarios del sistema.");
                     }
 
-                    var suscriptor = db.ReplicacionesSuscriptores.Where(x => x.UsuInicioSesion.Trim() == args.User.RepCodigo.Trim() && x.RepSuscriptor.ToString().Trim().ToUpper() == args.User.Suscriptor.Trim().ToUpper()).FirstOrDefault();
+                    var suscriptor = _context.ReplicacionesSuscriptores.Where(x => x.UsuInicioSesion.Trim() == args.User.RepCodigo.Trim() && x.RepSuscriptor.ToString().Trim().ToUpper() == args.User.Suscriptor.Trim().ToUpper()).FirstOrDefault();
 
                     if (suscriptor == null)
                     {
@@ -1426,7 +1390,7 @@ namespace MovilBusinessApiCore.Controllers
                         return BadRequest("No existe el suscriptor solicitado");
                     }
 
-                    SqlConnection connection = (SqlConnection)(db.Database.GetDbConnection());
+                    SqlConnection connection = (SqlConnection)(_context.Database.GetDbConnection());
 
                     if (connection.State != ConnectionState.Open)
                         connection.Open();
@@ -1456,7 +1420,6 @@ namespace MovilBusinessApiCore.Controllers
                     }
 
                     return Ok(dataSet);
-                }
             }
             catch (Exception e)
             {
@@ -1476,22 +1439,20 @@ namespace MovilBusinessApiCore.Controllers
             }
         }
 
-        [Route("api/ReplicacionesSuscriptores/SuscriptoresCambiosLeerImagenesLegacy")]
+        [Route("SuscriptoresCambiosLeerImagenesLegacy")]
         [HttpPost]
         public IActionResult SuscriptoresCambiosLeerImagenesLegacy([FromBody] ReplicacionesSuscriptoresCambiosLeerArgs args)
         {
             return SuscriptoresCambiosLeerImagenes(args);
         }
 
-        [Route("api/ReplicacionesSuscriptores/ImagenesCargar")]
+        [Route("ImagenesCargar")]
         [HttpPost]
         public IActionResult ImagenesCargar([FromBody] ImagenesCargarArgs args)
         {
             try
             {
-                using (MBContext db = new MBContext())
-                {
-                    if (!UsuarioSistema.Exists(args.User.RepCodigo, args.User.RepClave, db))
+                    if (!UsuarioSistema.Exists(args.User.RepCodigo, args.User.RepClave, _context))
                     {
                         return BadRequest("No existe este usuario en los usuarios del sistema");
                     }
@@ -1517,8 +1478,6 @@ namespace MovilBusinessApiCore.Controllers
 
                     return Ok(result);
 
-                }
-
             }
             catch (Exception e)
             {
@@ -1526,7 +1485,7 @@ namespace MovilBusinessApiCore.Controllers
             }
         }
 
-        [Route("api/ReplicacionesSuscriptores/SubirSqliteDb")]
+        [Route("SubirSqliteDb")]
         [HttpPost]
         public IActionResult SubirSqliteDb([FromBody] SubirSqliteDbArgs args)
         {
@@ -1537,14 +1496,12 @@ namespace MovilBusinessApiCore.Controllers
 
             try
             {
-                using (var db = new MBContext())
-                {
-                    if (!UsuarioSistema.Exists(args.User.RepCodigo, args.User.RepClave, db))
+                    if (!UsuarioSistema.Exists(args.User.RepCodigo, args.User.RepClave, _context))
                     {
                         return BadRequest("No existe este usuario en los usuarios del sistema");
                     }
 
-                    var suscriptor = db.ReplicacionesSuscriptores.Where(x => x.RepSuscriptor.ToString() == args.User.Suscriptor).FirstOrDefault();
+                    var suscriptor = _context.ReplicacionesSuscriptores.Where(x => x.RepSuscriptor.ToString() == args.User.Suscriptor).FirstOrDefault();
 
                     var repId = 1;
 
@@ -1557,7 +1514,7 @@ namespace MovilBusinessApiCore.Controllers
                         return BadRequest("El suscriptor no es valido");
                     }
 
-                    var rsbSecuencia = (db.ReplicacionesSuscriptoresBaseDatos.Select(x => new { x.RepSuscriptor, x.RepID, x.rsbSecuencia }).Where(x => x.RepSuscriptor.ToString() == args.User.Suscriptor && x.RepID == repId).Max(x => (int?)x.rsbSecuencia) ?? 0) + 1;
+                    var rsbSecuencia = (_context.ReplicacionesSuscriptoresBaseDatos.Select(x => new { x.RepSuscriptor, x.RepID, x.rsbSecuencia }).Where(x => x.RepSuscriptor.ToString() == args.User.Suscriptor && x.RepID == repId).Max(x => (int?)x.rsbSecuencia) ?? 0) + 1;
 
                     Guid.TryParse(args.User.Suscriptor, out Guid rowguid);
 
@@ -1572,11 +1529,10 @@ namespace MovilBusinessApiCore.Controllers
                         UsuIniciosesion = args.User.RepCodigo
                     };
 
-                    db.ReplicacionesSuscriptoresBaseDatos.Add(reg);
-                    db.SaveChanges();
+                    _context.ReplicacionesSuscriptoresBaseDatos.Add(reg);
+                    _context.SaveChanges();
 
                     return Ok();
-                }
             }
             catch (Exception e)
             {
@@ -1584,7 +1540,7 @@ namespace MovilBusinessApiCore.Controllers
             }
         }
 
-        [Route("api/ReplicacionesSuscriptores/CambiarContraseñaUsuario")]
+        [Route("CambiarContraseñaUsuario")]
         [HttpPost]
         public IActionResult CambiarContraseñaUsuario([FromBody]CambiarContrasenaArgs args)
         {
@@ -1607,14 +1563,12 @@ namespace MovilBusinessApiCore.Controllers
 
             try
             {
-                using (var db = new MBContext())
-                {
-                    writeLog = db.Parametros.Where(x => x.ParReferencia.Trim().ToUpper() == "WRITELOG" && x.ParValor.Trim() == "1").FirstOrDefault() != null;
+                    writeLog = _context.Parametros.Where(x => x.ParReferencia.Trim().ToUpper() == "WRITELOG" && x.ParValor.Trim() == "1").FirstOrDefault() != null;
 
                     UsuarioSistema usuarioSistema = null;
                     Representantes representante = null;
 
-                    var usuarios = db.UsuarioSistema.Where(x => x.UsuInicioSesion.Trim().ToUpper() == args.RepCodigo.Trim().ToUpper()).ToList();
+                    var usuarios = _context.UsuarioSistema.Where(x => x.UsuInicioSesion.Trim().ToUpper() == args.RepCodigo.Trim().ToUpper()).ToList();
 
                     foreach (var user in usuarios)
                     {
@@ -1630,7 +1584,7 @@ namespace MovilBusinessApiCore.Controllers
                         return BadRequest("La contraseña actual es incorrecta");
                     }
 
-                    var representantes = db.Representantes.Where(x => x.RepCodigo.Trim().ToUpper() == args.RepCodigo.Trim().ToUpper()).ToList();
+                    var representantes = _context.Representantes.Where(x => x.RepCodigo.Trim().ToUpper() == args.RepCodigo.Trim().ToUpper()).ToList();
 
                     foreach (var rep in representantes)
                     {
@@ -1646,7 +1600,7 @@ namespace MovilBusinessApiCore.Controllers
                         return BadRequest("La contraseña actual es incorrecta");
                     }
 
-                    var suscriptor = db.ReplicacionesSuscriptores.Where(x => x.RepSuscriptor.ToString().ToUpper() == args.Suscriptor.Trim().ToUpper() && x.UsuInicioSesion.Trim().ToUpper() == args.RepCodigo.Trim().ToUpper()).FirstOrDefault();
+                    var suscriptor = _context.ReplicacionesSuscriptores.Where(x => x.RepSuscriptor.ToString().ToUpper() == args.Suscriptor.Trim().ToUpper() && x.UsuInicioSesion.Trim().ToUpper() == args.RepCodigo.Trim().ToUpper()).FirstOrDefault();
 
                     if (suscriptor == null)
                     {
@@ -1664,10 +1618,9 @@ namespace MovilBusinessApiCore.Controllers
                     representante.RepClave = args.NewPass;
                     representante.UsuInicioSesion = args.RepCodigo;
 
-                    db.SaveChanges();
+                    _context.SaveChanges();
 
                     return Ok();
-                }
             }
             catch (Exception e)
             {
@@ -1688,7 +1641,7 @@ namespace MovilBusinessApiCore.Controllers
         }
 
         [HttpPost]
-        [Route("api/ReplicacionesSuscriptores/PresupuestosCargarOnline")]
+        [Route("PresupuestosCargarOnline")]
         public IActionResult PresupuestosCargarOnline([FromBody]PresupuestosOnlineArgs args)
         {
             var writeLog = false;
@@ -1708,16 +1661,15 @@ namespace MovilBusinessApiCore.Controllers
                 {
                     return BadRequest("El mes no puede estar vacio!");
                 }
-                using (MBContext db = new MBContext())
-                {
-                    writeLog = db.Parametros.Where(x => x.ParReferencia.Trim().ToUpper() == "WRITELOG" && x.ParValor.Trim() == "1").FirstOrDefault() != null;
 
-                    if (!UsuarioSistema.Exists(args.User.RepCodigo, args.User.RepClave, db))
+                    writeLog = _context.Parametros.Where(x => x.ParReferencia.Trim().ToUpper() == "WRITELOG" && x.ParValor.Trim() == "1").FirstOrDefault() != null;
+
+                    if (!UsuarioSistema.Exists(args.User.RepCodigo, args.User.RepClave, _context))
                     {
                         return BadRequest("Usuario o contraseña invalidos");
                     }
 
-                    SqlConnection conn = (SqlConnection)(db.Database.GetDbConnection());
+                    SqlConnection conn = (SqlConnection)(_context.Database.GetDbConnection());
                     SqlCommand command = new SqlCommand("sp_wsPresupuestosCargarOnline", conn)
                     {
                         CommandTimeout = 300
@@ -1760,8 +1712,6 @@ namespace MovilBusinessApiCore.Controllers
                         return BadRequest("No existen datos");
                     }
 
-                }
-
             }
             catch (Exception e)
             {
@@ -1781,7 +1731,7 @@ namespace MovilBusinessApiCore.Controllers
         }
 
         [HttpPost]
-        [Route("api/ReplicacionesSuscriptores/GetClientesUrl")]
+        [Route("GetClientesUrl")]
         public IActionResult GetClientesUrl([FromBody]GetClientesUrlArgs args)
         {
             try
@@ -1791,10 +1741,8 @@ namespace MovilBusinessApiCore.Controllers
                     throw new Exception("El key no puede estar vacio");
                 }
 
-                using (var db = new MBContext())
-                {
 
-                    var key = db.ClientesReplicacionesUrl.Where(x => x.CliUrlKey.Trim() == args.Key.Trim()).FirstOrDefault();
+                    var key = _context.ClientesReplicacionesUrl.Where(x => x.CliUrlKey.Trim() == args.Key.Trim()).FirstOrDefault();
 
                     if (key == null)
                     {
@@ -1803,7 +1751,6 @@ namespace MovilBusinessApiCore.Controllers
 
                     return Ok(key.CliUrl);
 
-                }
             }
             catch (Exception e)
             {
@@ -1812,7 +1759,7 @@ namespace MovilBusinessApiCore.Controllers
         }
 
         [HttpPost]
-        [Route("api/ReplicacionesSuscriptores/GetClientesVersion")]
+        [Route("GetClientesVersion")]
         public IActionResult GetClientesVersion([FromBody]GetClientesUrlArgs args)
         {
             try
@@ -1822,10 +1769,7 @@ namespace MovilBusinessApiCore.Controllers
                     throw new Exception("El key no puede estar vacio");
                 }
 
-                using (var db = new MBContext())
-                {
-
-                    var key = db.ClientesReplicacionesUrl.Where(x => x.CliUrlKey.Trim() == args.Key.Trim()).FirstOrDefault();
+                    var key = _context.ClientesReplicacionesUrl.Where(x => x.CliUrlKey.Trim() == args.Key.Trim()).FirstOrDefault();
 
                     if (key == null)
                     {
@@ -1834,7 +1778,6 @@ namespace MovilBusinessApiCore.Controllers
 
                     return Ok(key.CliReplicacionVersion);
 
-                }
             }
             catch (Exception e)
             {
@@ -1850,26 +1793,22 @@ namespace MovilBusinessApiCore.Controllers
         /// </summary>
         /// <param name="args"></param>
         /// <returns></returns>
-        [Route("api/ReplicacionesSuscriptores/PresupuestosCombos")]
+        [Route("PresupuestosCombos")]
         [HttpPost]
         public IActionResult PresupuestosCombos([FromBody]PresupuestosCombosArgs args)
         {
             var writeLog = false;
             var result = new List<PresupuestosCombosResult>();
-            using (MBContext db = new MBContext())
-            {
-                writeLog = db.Parametros.Where(x => x.ParReferencia.Trim().ToUpper() == "WRITELOG" && x.ParValor.Trim() == "1").FirstOrDefault() != null;
 
-                if (!UsuarioSistema.Exists(args.User.RepCodigo, args.User.RepClave, db))
+                writeLog = _context.Parametros.Where(x => x.ParReferencia.Trim().ToUpper() == "WRITELOG" && x.ParValor.Trim() == "1").FirstOrDefault() != null;
+
+                if (!UsuarioSistema.Exists(args.User.RepCodigo, args.User.RepClave, _context))
                 {
                     return BadRequest("Usuario o contraseña invalidos");
                 }
 
-                SqlConnection conn = (SqlConnection)(db.Database.GetDbConnection());
-                SqlCommand command = new SqlCommand("sp_wsPresupuestosCargarComboOnline", conn)
-                {
-                    CommandTimeout = 300
-                };
+                SqlConnection conn = (SqlConnection)(_context.Database.GetDbConnection());
+                SqlCommand command = new SqlCommand("sp_wsPresupuestosCargarComboOnline", conn);
                 command.CommandType = CommandType.StoredProcedure;
                 command.CommandTimeout = 0;
                 command.Parameters.Add(new SqlParameter("@Tipo", args.Tipo));
@@ -1920,8 +1859,6 @@ namespace MovilBusinessApiCore.Controllers
                     return BadRequest("No existen datos");
                 }
 
-
-            }
 
         }
     }
